@@ -4,6 +4,7 @@ write), UNIX file permissions, and dynamic memory allocation and deallocation in
 C program that reads in the contents of two input files. The program will then compare the two files, byte-by-byte, write
 differences into two output files, and output timings for the program’s two main steps as stated in the project’s requirements.
 */
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -115,27 +116,37 @@ void step1(char *file1, char *file2)
     char *buf_two = (char *)malloc(2 * sizeof(char));
 
     int i, j;
-    for (i = 0, j = 0; i < size_one - 1 || j < size_two - 1; i++, j++)
+    for (i = 0, j = 0; i < size_one || j < size_two; i++, j++)
     {
         // In case first file is bigger than
         if (size_one >= size_two)
         {
-            // read a byte on buffer
-            read(input_file1, buf_one, 1);
-            read(input_file2, buf_two, 1);
+            if(i < size_two){
 
-            buf_one[1] = '\0';
-            buf_two[1] = '\0';
+                // read a byte on buffer
+                read(input_file1, buf_one, 1);
+                read(input_file2, buf_two, 1);
 
-            if (buf_one[0] != buf_two[0])
-            {
-                // writing difference a byte
+                buf_one[1] = '\0';
+                buf_two[1] = '\0';
+
+                if (buf_one[0] != buf_two[0])
+                {
+                    // writing difference a byte
+                    write(output_file, buf_one, 1);
+                }
+                
+            }else{
+                // read a byte on buffer
+                read(input_file1, buf_one, 1);
+                buf_one[1] = '\0';
                 write(output_file, buf_one, 1);
             }
+            
         }
         else  // In case first file is smaller than
         {
-            if (i <= size_one - 1)
+            if (i < size_one)
             {
                 // read a byte on buffer
                 read(input_file1, buf_one, 1);
@@ -223,11 +234,11 @@ void step2(char *file1, char *file2)
     char *diff = (char *)malloc(2 * sizeof(char));
 
     int i, j;
-    for (i = 0, j = 0; i < size_one - 1 || j < size_two - 1; i++, j++)
+    for (i = 0, j = 0; i < size_one || j < size_two; i++, j++)
     {
         if (size_one >= size_two)
         {   // In case first file is bigger than
-            if (j <= size_two - 1)
+            if (j < size_two)
             {
 
                 if (buf_one[i] != buf_two[j])
@@ -242,17 +253,32 @@ void step2(char *file1, char *file2)
         }
         else // In case first file is small than
         {
-            if (buf_one[i] != buf_two[j])
-            {
+            if(j < size_one){
+
+                 if (buf_one[i] != buf_two[j])
+                {
+                    diff[0] = buf_two[j];
+                    diff[1] = '\0';
+
+                    // writing a byte with difference
+                    write(output_file, diff, 1);
+                }
+
+            }else{
+                
                 diff[0] = buf_two[j];
                 diff[1] = '\0';
-
                 // writing a byte with difference
                 write(output_file, diff, 1);
             }
+           
         }
     }
 
+    // if(size_one == size_two) {
+    //     write(output_file, "\n", 1);
+    // }
+    
     // dynamically allocated momory free
     free(buf_one);
     free(buf_two);
